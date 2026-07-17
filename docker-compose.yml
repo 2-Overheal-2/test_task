@@ -1,0 +1,36 @@
+name: employee_requests
+services:
+  db:
+      image: postgres:16-alpine
+      container_name: test_db
+      environment:
+        POSTGRES_DB: test
+        POSTGRES_USER: app_user
+        POSTGRES_PASSWORD: app_password
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U app_user -d test"]
+        interval: 5s
+        timeout: 5s
+        retries: 10
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile_app
+    volumes:
+      - ./app:/app
+    container_name: test_app
+    command: bash -c "alembic upgrade head"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://app_user:app_password@db:5432/test
+    depends_on:
+      db:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:

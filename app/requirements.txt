@@ -1,0 +1,7 @@
+sqlalchemy
+sqlmodel
+psycopg2-binary
+alembic
+typer
+pytest
+Faker
