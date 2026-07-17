@@ -30,8 +30,8 @@ git --version
 ## Клонирование проекта
 
 ```bash
-git clone https://github.com/<username>/<repository-name>.git
-cd <repository-name>
+git clone https://github.com/2-Overheal-2/test_task.git
+cd test_task
 ```
 
 
