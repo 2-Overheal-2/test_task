@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from sqlalchemy import text
 from sqlmodel import Session
 
-from app.database import engine
+from db import engine
 
 
 INDEX_NAME = "idx_request_assignee_status_due_date"
@@ -18,7 +18,6 @@ WARMUP_RUNS = 3
 
 @dataclass
 class BenchmarkResult:
-    name: str
     timings: list[float]
     explain_plan: list[str]
 
@@ -64,10 +63,15 @@ def get_benchmark_parameters(session: Session) -> tuple[uuid.UUID, str]:
     result = session.execute(
         text(
             """
-            SELECT assigned_to_id, status, COUNT(*) AS request_count
+            SELECT
+            assigned_to_id,
+            status,
+            COUNT(*) AS request_count
             FROM request
-            WHERE status = 'IN_PROGRESS' AND due_date < CURRENT_DATE
-            GROUP BY assigned_to_id
+            WHERE status = 'IN_PROGRESS'
+            AND due_date < CURRENT_DATE
+            AND assigned_to_id IS NOT NULL
+            GROUP BY assigned_to_id, status
             ORDER BY COUNT(*) DESC
             LIMIT 1
             """
@@ -139,14 +143,13 @@ def get_explain_plan(session: Session, *, assigned_to_id: uuid.UUID, status: str
         {
             "assigned_to_id": assigned_to_id,
             "status": status,
-            "limit": RESULT_LIMIT,
         },
     )
 
     return [row[0] for row in result.fetchall()]
 
 
-def measure_query(session: Session, name: str, assigned_to_id: uuid.UUID, status: str) -> BenchmarkResult:
+def measure_query(session: Session, assigned_to_id: uuid.UUID, status: str) -> BenchmarkResult:
 
     timing: list[float] = []
     for run_number in range(1, BENCHMARK_RUNS + 1):
@@ -154,14 +157,13 @@ def measure_query(session: Session, name: str, assigned_to_id: uuid.UUID, status
 
         timing.append(elapsed_ms)
 
-        print(f"{name}: запуск {run_number:02d} — {elapsed_ms:.3f} мс")
+        print(f"Замер: {run_number:02d} — {elapsed_ms:.3f} мс")
 
-    return BenchmarkResult(name=name, timings=timing, explain_plan=get_explain_plan(session, assigned_to_id=assigned_to_id, status=status))
+    return BenchmarkResult(timings=timing, explain_plan=get_explain_plan(session, assigned_to_id=assigned_to_id, status=status))
 
 
 def print_benchmark_result(result: BenchmarkResult) -> None:
     print()
-    print(result.name)
 
     print(f"Минимальное время: {result.minimum_ms:.3f} мс")
     print(f"Максимальное время: {result.maximum_ms:.3f} мс")
@@ -184,7 +186,6 @@ def print_comparison(before: BenchmarkResult, after: BenchmarkResult) -> None:
     print(f"До индекса:    {before_time:.3f} мс")
     print(f"После индекса: {after_time:.3f} мс")
     print(f"Разница:       {difference_ms:.3f} мс")
-    print(f"Ускорение:     {speedup:.2f} раза")
 
 
 

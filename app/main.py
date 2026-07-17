@@ -2,7 +2,6 @@ from db import init_db
 from menus.employee_menu import employee_menu
 from menus.report_menu import report_menu
 from menus.request_menu import request_menu
-from menus.benchmark_menu import benchmark_menu
 
 
 def on_startup():
@@ -15,7 +14,6 @@ def show_menu() -> None:
     print("1. Сотрудники")
     print("2. Заявки")
     print("3. Отчёты")
-    print("4. Benchmark")
     print("0. Выход")
 
 
@@ -31,8 +29,6 @@ def main() -> None:
             request_menu()
         elif choice == "3":
             report_menu()
-        elif choice == "4":
-            benchmark_menu()
         elif choice == "0":
             print("Программа завершена")
             break
