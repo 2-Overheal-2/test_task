@@ -33,7 +33,21 @@ git --version
 git clone https://github.com/2-Overheal-2/test_task.git
 cd test_task
 ```
+## Настройка переменных окружения
 
+Перед запуском проекта необходимо создать файл `.env` в директории app.
+
+Пример содержимого:
+
+```env
+POSTGRES_DB=test
+POSTGRES_USER=app_user
+POSTGRES_PASSWORD=app_password
+DATABASE_URL=postgresql+psycopg2://app_user:app_password@db:5432/test
+```
+
+
+Для примера настроек можно скопировать файл `.example.env`.
 
 ## Запуск компоуза
 
